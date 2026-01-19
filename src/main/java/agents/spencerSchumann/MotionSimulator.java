@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package agents.spencerSchumann;
+package main.java.agents.spencerSchumann;
 
 import main.java.engine.helper.MarioActions;
 

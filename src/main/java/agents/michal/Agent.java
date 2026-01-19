@@ -1,4 +1,4 @@
-package agents.michal;
+package main.java.agents.michal;
 
 import main.java.engine.core.MarioAgent;
 import main.java.engine.core.MarioForwardModel;

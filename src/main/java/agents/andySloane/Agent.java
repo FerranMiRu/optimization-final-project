@@ -1,4 +1,4 @@
-package agents.andySloane;
+package main.java.agents.andySloane;
 
 import main.java.engine.core.MarioForwardModel;
 import main.java.engine.core.MarioTimer;

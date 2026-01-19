@@ -1,4 +1,4 @@
-package agents.andySloane;
+package main.java.agents.andySloane;
 
 // not even started
 

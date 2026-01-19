@@ -1,4 +1,4 @@
-package agents.sergeyKarakovskiy;
+package main.java.agents.sergeyKarakovskiy;
 
 import main.java.engine.core.MarioAgent;
 import main.java.engine.core.MarioForwardModel;

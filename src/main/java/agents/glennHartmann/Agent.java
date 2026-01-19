@@ -1,4 +1,4 @@
-package agents.glennHartmann;
+package main.java.agents.glennHartmann;
 
 import main.java.engine.core.MarioAgent;
 import main.java.engine.core.MarioForwardModel;

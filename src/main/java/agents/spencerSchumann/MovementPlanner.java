@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package agents.spencerSchumann;
+package main.java.agents.spencerSchumann;
 
 import java.util.ArrayList;
 import java.util.Collections;

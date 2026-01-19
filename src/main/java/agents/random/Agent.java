@@ -1,4 +1,4 @@
-package agents.random;
+package main.java.agents.random;
 
 import java.util.ArrayList;
 import java.util.Random;

@@ -1,4 +1,4 @@
-package agents.sergeyPolikarpov;
+package main.java.agents.sergeyPolikarpov;
 
 import java.util.Random;
 

@@ -43,7 +43,7 @@ public class MarioResult {
 
         score += this.getTotalDistance();
         score += 64 * this.getNumCollectedFireflower();
-        score += 58 * this.getNumCollectedMushrooms();
+        score += 5.8 * this.getNumCollectedMushrooms(); // apparently every collected mushroom counts as 10 so we divide the multiplier
         score += 58 * this.getNumCollectedLifeMushrooms();
         score += 42 * this.getKillsTotal();
         score += 12 * this.getKillsByStomp();

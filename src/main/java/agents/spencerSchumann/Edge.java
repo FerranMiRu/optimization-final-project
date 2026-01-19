@@ -1,4 +1,4 @@
-package agents.spencerSchumann;
+package main.java.agents.spencerSchumann;
 
 /**
  * @author Spencer Schumann

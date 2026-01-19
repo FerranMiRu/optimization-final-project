@@ -61,7 +61,7 @@ public class PlayLevel {
     public static void main(String[] args) {
         MarioGame game = new MarioGame();
 
-        Agent agent = Agent.load("lvl-1.txt");
+        Agent agent = Agent.load("improved-algorithm-extra-training.txt");
         // Agent agent = new Agent(3100, 5);
         // agent.setRandomChromosome();
 

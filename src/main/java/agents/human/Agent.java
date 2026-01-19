@@ -1,4 +1,4 @@
-package agents.human;
+package main.java.agents.human;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;

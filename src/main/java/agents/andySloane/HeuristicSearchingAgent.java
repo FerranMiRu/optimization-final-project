@@ -1,4 +1,4 @@
-package agents.andySloane;
+package main.java.agents.andySloane;
 
 import java.io.IOException;
 import java.util.Comparator;

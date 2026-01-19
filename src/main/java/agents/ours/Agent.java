@@ -1,4 +1,4 @@
-package agents.ours;
+package main.java.agents.ours;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -42,6 +42,8 @@ public class Agent implements MarioAgent {
         for (int i = 0; i < this.realTotalTicks; i++) {
             expandedChromosome[i] = this.chromosome[i / realGranularity];
         }
+
+        this.currentGeneIndex = 0;
     }
 
     @Override

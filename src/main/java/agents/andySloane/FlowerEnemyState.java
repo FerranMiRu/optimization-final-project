@@ -1,4 +1,4 @@
-package agents.andySloane;
+package main.java.agents.andySloane;
 
 public final class FlowerEnemyState extends EnemyState {
 

@@ -3,6 +3,8 @@ package main.java;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Random;
 import main.java.agents.ours.Agent;
 import main.java.engine.core.MarioGame;
@@ -29,9 +31,10 @@ public class TrainAgent {
         int totalTicks = 3100; // the maximum time on a level is 200 seconds and inside each second there are 15 ticks, we add a buffer time just in case
         int granularity = 2; // how many ticks we keep doing the same action
 
-        int populationSize = 200;
-        // int num_generations = 10000 / populationSize; // we can only evaluate a level 10000 times per championship rules
-        int num_generations = 100000;
+        int populationSize = 50;
+        int num_generations = 10000 / populationSize; // we can only evaluate a level 10000 times per championship rules
+        // int num_generations = 2000;
+        int elitismSize = Math.max(2, 2 * (int) Math.round((populationSize * 0.05) / 2));
         double tournamentSizePercentage = 0.15;
         int tournamentSize = Math.max((int) (populationSize * tournamentSizePercentage), 3);
         double crossoverRate = 0.3;
@@ -48,6 +51,18 @@ public class TrainAgent {
             population[i].setRandomChromosome();
         }
 
+        try {
+            Files.write(
+                Paths.get("results.csv"),
+                (
+                    "generation,average_score,average_distance,max_score,max_distance,min_score,min_distance\n"
+                ).getBytes(),
+                java.nio.file.StandardOpenOption.CREATE
+            );
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+        }
+
         // Genetic Algorithm
         for (int generation = 0; generation < num_generations; generation++) {
             System.out.println(
@@ -61,18 +76,73 @@ public class TrainAgent {
             );
 
             // Evaluation
+            float averageScore = 0,
+                averageDistance = 0,
+                maxScore = Float.MIN_VALUE,
+                maxDistance = Float.MIN_VALUE,
+                minScore = Float.MAX_VALUE,
+                minDistance = Float.MAX_VALUE;
             for (int i = 0; i < populationSize; i++) {
                 MarioResult result = game.runGame(population[i], level, 200, 0, false);
                 population[i].setScore(result.getScore());
+
+                if (generation % 10 == 0) {
+                    averageScore += result.getScore();
+                    averageDistance += result.getTotalDistance();
+
+                    maxScore = Math.max(maxScore, result.getScore());
+                    maxDistance = Math.max(maxDistance, result.getTotalDistance());
+
+                    minScore = Math.min(minScore, result.getScore());
+                    minDistance = Math.min(minDistance, result.getTotalDistance());
+                }
+            }
+
+            if (generation % 10 == 0) {
+                averageScore /= populationSize;
+                averageDistance /= populationSize;
+
+                System.out.println("\tAverage Score: " + averageScore);
+                System.out.println("\tAverage Distance: " + averageDistance);
+                System.out.println("\tMax Score: " + maxScore);
+                System.out.println("\tMax Distance: " + maxDistance);
+                System.out.println("\tMin Score: " + minScore);
+                System.out.println("\tMin Distance: " + minDistance);
+
+                try {
+                    Files.write(
+                        Paths.get("results.csv"),
+                        (
+                            "" +
+                            generation +
+                            "," +
+                            averageScore +
+                            "," +
+                            averageDistance +
+                            "," +
+                            maxScore +
+                            "," +
+                            maxDistance +
+                            "," +
+                            minScore +
+                            "," +
+                            minDistance +
+                            "\n"
+                        ).getBytes(),
+                        java.nio.file.StandardOpenOption.APPEND
+                    );
+                } catch (IOException e) {
+                    System.out.println("Error writing to file: " + e.getMessage());
+                }
             }
 
             // Selection
-            Agent[] matingPool = new Agent[populationSize];
+            Agent[] matingPool = new Agent[populationSize - elitismSize];
 
-            for (int i = 0; i < populationSize; i++) {
+            for (int i = 0; i < populationSize - elitismSize; i++) {
                 boolean firstScore = true;
                 int winnerIndex = -1;
-                float maxScore = Float.MIN_VALUE;
+                maxScore = Float.MIN_VALUE;
 
                 for (int j = 0; j < tournamentSize; j++) {
                     Agent participant = population[rnd.nextInt(populationSize)];
@@ -86,8 +156,11 @@ public class TrainAgent {
                 matingPool[i] = population[winnerIndex];
             }
 
+            // Elitism - we need to order the population by scores
+            Arrays.sort(population, Comparator.comparing(Agent::getScore));
+
             // Crossover
-            for (int i = 0; i < populationSize; i += 2) {
+            for (int i = 0; i < populationSize - elitismSize; i += 2) {
                 Agent parent1 = matingPool[i];
                 Agent parent2 = matingPool[i + 1];
 
@@ -115,7 +188,7 @@ public class TrainAgent {
             }
 
             // Mutation
-            for (int i = 0; i < populationSize; i++) {
+            for (int i = 0; i < populationSize - elitismSize; i++) {
                 Agent agent = population[i];
 
                 for (int j = 0; j < agent.getChromosome().length; j++) {

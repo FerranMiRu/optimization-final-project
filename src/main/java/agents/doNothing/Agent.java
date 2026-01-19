@@ -1,4 +1,4 @@
-package agents.doNothing;
+package main.java.agents.doNothing;
 
 import main.java.engine.core.MarioAgent;
 import main.java.engine.core.MarioForwardModel;

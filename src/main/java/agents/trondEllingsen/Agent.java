@@ -1,4 +1,4 @@
-package agents.trondEllingsen;
+package main.java.agents.trondEllingsen;
 
 import main.java.engine.core.MarioAgent;
 import main.java.engine.core.MarioForwardModel;

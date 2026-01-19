@@ -1,0 +1,5 @@
+Average Score: 469
+Average Distance: 431
+Amount Completed Runs: 2
+Best Score: 5980.0
+Best Distance: 3168.0

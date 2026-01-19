@@ -5,6 +5,7 @@
 \usepackage{amsfonts}
 \usepackage{geometry}
 \usepackage{url}
+\usepackage{graphicx}
 \geometry{margin=1in}
 
 \title{\textbf{Learning Levels of Mario AI Using Genetic Algorithms}}
@@ -12,28 +13,26 @@
     \textbf{Team Members:} \\
     Ferran Mirabent, Carlos Bellanco, Roger Pieres, \\
     Martí Lorente, Marc Martínez \\
-    \textit{Master's Course in Optimization}
+    \textit{Optimization}
 }
-\date{December 14, 2025}
+\date{January 19, 2026}
 
 \begin{document}
 
 \maketitle
 
 \section{Motivation}
-We selected the paper \textit{"Learning Levels of Mario AI Using Genetic Algorithms"} by Baldominos et al. to apply the concepts learned in the Optimization course to a video game environment.
-The primary motivation lies in treating the gameplay not as a reactive agent problem—where the agent must decide actions based on real-time visual processing—but as a pure optimization problem.
-By defining the level completion as finding the optimal timed sequence of keystrokes, we can focus strictly on the mechanics of the Genetic Algorithm (GA) and the objective function without the computational overhead of state-space dimensionality or vision processing.
+We selected this paper because we wanted to dive deep into our recent coursework on Genetic Algorithms while combining it with our passion for videogames. The research focuses on the Mario AI Championship benchmark, but instead of training a complex reactive agent, it treats level completion as an optimization problem of finding the perfect timed sequence of actions. This approach allows us to focus deeply on the mechanics of the Genetic Algorithm without getting bogged down in the complexities of real-time vision processing or state-space dimensionality. We would additionally like to explore a Deep Learning approach as an alternative solution.
 
 \section{Introduction to the Optimization Problem}
-The optimization problem addresses the \textit{Learning Track} of the Mario AI Championship. The objective is to maximize the score obtained in a specific fixed level of \textit{Infinite Mario Bros}.
+The objective is to maximize the score obtained in the Learning Track of \textit{Infinite Mario Bros}, the level used for the Mario AI Championship.
 Unlike standard gameplay where an agent reacts to the environment, this approach seeks a pre-defined sequence of actions that maximizes the fitness function $S$ (Score).
 
 The constraints and conditions of the problem are:
 \begin{itemize}
-    \item \textbf{Search Space:} The agent must determine a sequence of inputs (actions) for every time tick of the game.
+    \item \textbf{Search Space:} The agent must determine a sequence of inputs (actions) for every time tick/frame of the game.
     \item \textbf{Computational Limit:} The agent is allowed a maximum of $N = 10,000$ games (evaluations) to learn the level.
-    \item \textbf{Input Constraints:} The controller simulates a D-Pad and two buttons (A and B). While there are $2^6 = 64$ combinations, domain knowledge reduces this to 22 feasible distinct actions (e.g., pressing Left and Right simultaneously is impossible).
+    \item \textbf{Input Constraints:} The controller simulates a D-Pad (Left, Right, Up and Down) and two buttons (A and B). While there are $2^6 = 64$ combinations, domain knowledge reduces this to 22 feasible distinct actions (e.g., pressing Left and Right simultaneously is impossible, pressing Up does nothing, etc).
 \end{itemize}
 
 The objective function to maximize is the \textbf{Score ($S$)}, defined by the Championship rules:
@@ -42,7 +41,7 @@ The objective function to maximize is the \textbf{Score ($S$)}, defined by the C
 \end{equation}
 Where:
 \begin{itemize}
-    \item $D$: Physical distance traveled.
+    \item $D$: Physical distance travelled.
     \item $s$: Final status (1 if level completed, 0 otherwise).
     \item $t'$: Time remaining.
     \item $k, k_{st}, k_{sh}, k_f$: Enemies killed (total and by specific method).
@@ -58,8 +57,15 @@ The authors propose a Genetic Algorithm (GA) to evolve the sequence of actions. 
 The chromosome represents the sequence of actions Mario performs throughout the level.
 \begin{itemize}
     \item \textbf{Genes:} Each gene is an integer representing a specific combination of buttons pressed. In the first stage, the search space is reduced to 11 actions (assuming the Run button is always pressed). In the second stage, all 22 feasible actions are used.
-    \item \textbf{Chromosome Length:} The length is fixed at 3,000 genes. This derives from the maximum level time (200 seconds) discretized into 15 ticks per second ($200 \times 15 = 3000$).
+    \item \textbf{Chromosome Length:} The length is fixed at 3,000 genes. This derives from the maximum level time (200 seconds) discretized into 15 ticks/frames per second ($200 \times 15 = 3000$).
 \end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{encodings.png}
+    \caption{List of actions along with the pressed buttons. \cite{baldominos}}
+    \label{fig:deepql}
+\end{figure}
 
 \subsection{Genetic Operators}
 The algorithm uses Tournament Selection, Crossover, and Mutation, tailored differently in the two experimental stages.
@@ -67,11 +73,11 @@ The algorithm uses Tournament Selection, Crossover, and Mutation, tailored diffe
 \subsubsection{Initialization}
 \begin{itemize}
     \item \textbf{Naive:} Actions are chosen randomly.
-    \item \textbf{Hybrid (Domain-Dependent):} Recognizing that moving right is the primary goal, a "guided" initialization favors \textit{Right} and \textit{Right+Jump} actions. The hybrid approach randomly selects between naive and guided initialization for each gene.
+    \item \textbf{Hybrid (Domain-Dependent):} Recognizing that moving right is the primary goal, a "guided" initialization favours \textit{Right} and \textit{Right+Jump} actions. The hybrid approach randomly selects between naive and guided initialization for each gene.
 \end{itemize}
 
 \subsubsection{Selection}
-Tournament selection is used, where a subset of individuals ($T_s$) compete, and the one with the highest fitness becomes a parent. The domain-dependent stage adds elitism to preserve the best solutions.
+Tournament selection is used, where a subset of individuals ($T_s$) compete, and the one with the highest fitness becomes a parent. This process is repeated until we have a number of parents equivalent to the population so we can take them in pairs during crossover. A parent might be repeated multiple times if it wins multiple tournaments. The domain-dependent stage adds elitism to preserve the best solutions.
 
 \subsubsection{Crossover}
 \begin{itemize}
@@ -88,34 +94,203 @@ Tournament selection is used, where a subset of individuals ($T_s$) compete, and
 \section{Proposal of Alternative Algorithms}
 While the Genetic Algorithm effectively optimizes a fixed sequence, other approaches could solve the sequence generation problem or the general gameplay agent problem.
 
-\subsection{A* Search Algorithm}
-A* can be used to search the state space of the game simulator. By looking ahead into the future of the physics engine, the agent builds a tree of possible next states (sequences of actions).
+\subsection{Q-Learning algorithm}
+Q-learning is a reinforcement learning algorithm where an agent learns which action to take in each state in order to maximize long-term reward through trial and error.
+
+\subsubsection{Steps}
+At each time step, the agent:
+\begin{enumerate}
+    \item Observes the current state $s$
+    \item Chooses an action $a$
+    \item Receives a reward $r$ received immediately after taking action $a$ in state $s$
+    \item Transitions to a new state $s'$
+\end{enumerate}
+
+\subsubsection{Q-function and Temporal Difference learning}
+
+The agent stores its knowledge in the Q-function \(Q(s,a)\), which represents the expected cumulative reward obtained by taking action \(a\) in state \(s\) and then following the optimal policy. These values are stored in a Q-table, with one entry for each state--action pair.
+
+Q-learning is a model-free reinforcement learning algorithm that learns online using a Temporal Difference (TD) update rule:
+\[
+Q(s,a) \leftarrow Q(s,a) + \alpha \Big[r + \gamma \max_{a'} Q(s',a') - Q(s,a)\Big]
+\]
+where \(\alpha\) is the learning rate (how much I trust the new information) and \(\gamma\) is the discount factor (controls how much future rewards matter).
+
+As a TD method, Q-learning updates its estimates using the difference between successive predictions, without waiting for an episode to terminate. This incremental update ensures stable learning in noisy environments. Over time, actions leading to higher rewards obtain higher Q-values, and once the values converge, selecting the action with the highest \(Q(s,a)\) yields the optimal policy.
+
+\subsubsection{States}
+The state represents what Mario perceives, usually via local features instead of absolute positions:
 \begin{itemize}
-    \item \textbf{Comparison:} Unlike the GA, which evolves a full schedule blind to the immediate state, A* makes locally optimal decisions that aggregate to a solution. A* is generally more computationally expensive per step (requiring forward modeling) but can adapt to dynamic changes if the level were not fixed. In the context of the Mario AI benchmark, A* has historically outperformed other methods in the Gameplay track.
+    \item Enemy ahead (yes/no)
+    \item Gap ahead (yes/no)
+    \item Mario on ground or in air
+    \item Power-up status
 \end{itemize}
 
-\subsection{Deep Learning (Deep Q-Networks)}
-Instead of optimizing a predefined list of discrete actions, a Deep Learning approach (specifically Deep Reinforcement Learning) could train a neural network to output actions based on the screen's pixel data.
+This allows generalization across the level rather than memorizing a fixed path.
+
+\subsubsection{Actions}
+Typical actions include:
 \begin{itemize}
-    \item \textbf{Comparison:} This method aligns with the "DeepMind Atari" approach.
-    While the GA in the referenced paper ignores the game state (blind replay), a DQN agent learns a policy $\pi(state) \to action$. This would result in a more robust agent capable of playing \textit{any} level, not just the specific seed it was trained on. However, training a DQN requires significantly more compute resources and samples than the 10,000-game limit imposed by the specific Learning Track rules addressed in the paper.
+    \item Move right
+    \item Jump
+    \item Move right + jump
+    \item Shoot (if powered up)
 \end{itemize}
+
+\subsubsection{Rewards}
+Rewards guide learning:
+\begin{itemize}
+    \item Small positive reward for moving right
+    \item Positive reward for defeating enemies or collecting items
+    \item Large positive reward for finishing the level
+    \item Large negative reward for dying
+\end{itemize}
+\setlength{\parskip}{0.8em}
+
+
+\subsection{Deep Q-Learning (DQL)}
+Deep Q-Learning (DQL) works by combining the Q-learning update rule with a convolutional neural network that approximates the Q-function. Instead of storing Q-values in a table, the agent uses a neural network to estimate the value of each action for a given state.
+\setlength{\parskip}{0.8em}
+
+At each time step, the agent observes the current state of the environment. This state can be a vector of features or even raw pixels from the screen, as in Mario Bros. The state is fed into a convolutional neural network, which outputs one Q-value for each possible action.
+These values represent the agent’s current estimate of how good each action is in that state.
+\setlength{\parskip}{0.8em}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{DQL.PNG}
+    \caption{Deep Q-Learning architecture}
+    \label{fig:deepql}
+\end{figure}
+\setlength{\parskip}{0.5em}
+
+
+\subsubsection{Exploration–exploitation strategy}
+To decide what to do, the agent follows an exploration--exploitation strategy, usually $\varepsilon$-greedy. With a small probability $\varepsilon$, it chooses a random action to explore new behaviours.
+Otherwise, it selects the action with the highest predicted Q-value.
+If Mario always chooses the best action he knows, he may never discover a better action.
+If Mario always tries random actions, he never uses what he has learned.
+So we need both.
+The chosen action is executed in the environment, which returns a reward and a new state.\\
+Hence, $\varepsilon$-greedy balances exploration and exploitation by choosing random actions with probability $\varepsilon$ and the best-known action otherwise.\\ As the number of episodes increases, the agent gains more information about how to progress through the level, and therefore it becomes increasingly likely to choose the best possible action and for the algorithm to converge.
+\setlength{\parskip}{0.8em}
+
+\subsubsection{Learning process}
+The experience consisting of the current state, the chosen action, the received reward, and the next state is stored in a memory called the replay buffer. Instead of learning immediately from the most recent experience, the agent periodically samples random batches of past experiences from this buffer. This breaks the strong correlations between consecutive steps and makes learning more stable.
+\setlength{\parskip}{0.5em}
+
+Learning is performed by updating the convolutional neural network’s weights (the filters). For each sampled experience, a target value is computed using the reward and the estimated value of the best action in the next state. To make this target stable, Deep Q-Learning uses a separate target network whose parameters are updated more slowly. The neural network is then trained by minimizing the difference between its current Q-value prediction and this target value using gradient descent.
+\setlength{\parskip}{0.8em}
+
+Over many interactions, rewards obtained at later stages of an episode propagate backward through these updates. The network gradually learns to assign higher Q-values to actions that lead to long-term success and lower values to actions that result in poor outcomes. In a game like Mario Bros, this process allows the agent to learn behaviours such as jumping when an enemy appears or avoiding gaps, even in different levels, because the neural network generalizes across similar states.
+\setlength{\parskip}{0.8em}
+
+\subsection{A* Search algorithm}
+In the context of Mario Bros, the A* algorithm can be used as a planning method to compute an
+optimal sequence of actions that leads Mario from his initial position to the goal. Each node
+in the search space represents a possible game state, typically defined by Mario’s position,
+velocity, and whether he is on the ground or in the air. Edges correspond to feasible actions
+such as moving right, jumping, or performing a running jump, with an associated cost related
+to time, risk, or energy.
+
+The algorithm evaluates each state using a cost function \( f(n) = g(n) + h(n) \), where
+\( g(n) \) measures the cost accumulated so far and \( h(n) \) estimates the remaining distance to the level’s end, often based on horizontal distance to the goal. By repeatedly expanding
+the state with the lowest estimated total cost, A* searches for a path that safely reaches the
+goal while avoiding obstacles and gaps.
+
+Although A* can find optimal paths in deterministic and fully known levels, its applicability in Mario Bros is limited by the dynamic nature of the game, including moving enemies and precise timing constraints, which make real-time replanning computationally expensive.
+Moreover, Using only the horizontal distance to the goal as the heuristic \( h(n) \) in Mario Bros
+is admissible but weak, because many different paths share similar distances and therefore
+receive similar heuristic values. As a result, A* is forced to explore a large number of
+alternative trajectories.
 
 \section{Reproduction of Methodology}
-\textit{This section will be completed by the team. It will include the implementation of the headless simulation mode, the chromosome encoding, and the reproduction of the domain-dependent operators described in Section 3.}
+\subsection{Framework Setup}
+We use version 0.8 of the original Mario AI Framework \cite{marioai}, written in Java. Although the original paper references a specific "Learning Track", this was unavailable in the current repository, so we settled on using the original Level 1 as our benchmark. The framework worked out-of-the-box after setting up the Java environment, but it lacked a crucial component: the scoring function.
+
+We implemented a \texttt{getScore} method to replicate the fitness function described in the paper. However, we made two heuristic modifications:
+\begin{enumerate}
+    \item We removed the scoring for "hidden blocks" as the current framework does not emit an event when they are discovered. In its stead we increase to $20$ the multiplier of the coins, as hitting a hidden block usually rewards you with a coin.
+    \item We observed that agents quickly learned to exploit the "time remaining" bonus by dying as quickly as possible to maximize the remaining clock. To prevent this local optimum, we modified the fitness function to only award the time bonus if the level is successfully completed.
+\end{enumerate}
+
+\subsection{Chromosome Encoding}
+
+The framework expects an action at every tick/frame represented as a boolean array of 5 elements: \texttt{[Left, Right, Down, Speed, Jump]}. To simplify the search space, we adopted the paper's approach of defining 11 composite actions.
+An agent is characterized by its chromosome, an ordered sequence of genes (actions):
+
+\[
+C = \langle g_1, g_2, \dots, g_L \rangle
+\]
+
+where $L$ is the chromosome length. The length is determined by the maximum duration of a level and the temporal granularity parameter $g$, which specifies the number of ticks during which a single action is held constant. Formally,
+
+\[
+L = \frac{\text{totalTicks}}{g}
+\]
+
+This granularity models human-like behaviour, as players typically hold actions for multiple frames rather than changing inputs every tick.
+
+Before a run of the level, each gene of the chromosome is expanded to match the total amount of required ticks/frames to cover the full duration of the level.
+At each tick/frame, the agent selects the corresponding gene and decodes it into a boolean action vector, which is then returned to the environment.
+
+\subsection{Genetic Algorithm}
+Since the JGAP library used in the original paper is no longer available, we implemented the Genetic Algorithm from scratch. We successfully reproduced the first version of the algorithm using:
+\begin{itemize}
+    \item \textbf{Selection:} Tournament selection (size 15\%).
+    \item \textbf{Crossover:} Single-point crossover (rate 30\%).
+    \item \textbf{Mutation:} Random mutation (rate 1\%).
+\end{itemize}
+
+Initially, this basic implementation proved too random; best-performing agents were often lost between generations, preventing convergence. To address this, we implemented two domain-specific improvements mentioned in the paper:
+\begin{enumerate}
+    \item \textbf{Guided Initialization:} Instead of a purely uniform distribution, we biased the initial population to favour moving Right or Right+Jump (62.5\% probability), based on the heuristic that forward progress is essential.
+    \item \textbf{Elitism:} We preserved the top 5\% of the population (minimum 2 agents) unchanged in the next generation. This prevented the loss of the best solutions found so far.
+\end{enumerate}
+
+\subsection{Results}
+We conducted our experiments with a population size of 50. Our initial run under championship rules (10,000 level evaluations limit) allowed for only 200 generations.
+
+\textbf{Initial Reproduction:} Our basic GA achieved a maximum score of 308.11 and an average of 132. This failed to match the paper's results (Max: 8551), largely because the agents behaved like random walkers, moving left and right with equal probability and making little forward progress.
+
+\textbf{Weighted Fitness:} We attempted to improve performance by heavily weighting forward movement in the fitness function. While the average score increased to 2488, the actual distance travelled remained low (Best Distance: 310). The agents optimized for local rewards without reaching the goal.
+
+\textbf{Extra Training (Basic GA):} Removing the championship limits and training for longer (10000 generations) and with a bigger population (200) did not help; the lack of elitism meant good solutions were lost as fast as they were found, as we can see from the jagged lines in figure \ref{fig:extra_training}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\textwidth]{extra_training.png}
+    \caption{Evolution of fitness over generations during extra training (Basic GA). Note the volatility in the best score due to the lack of elitism.}
+    \label{fig:extra_training}
+\end{figure}
+
+\textbf{Improved Algorithm (Guided Init + Elitism):} Introducing guided initialization and elitism produced a dramatic improvement. Under championship rules, we achieved a best score of 3169.53 and a distance of 2761. The population average (413) remained low, indicating that while elite agents were succeeding, the general population was still exploring randomly.
+
+\textbf{Improved Algorithm + Extra Training:} By combining the improved algorithm with extended training (200 population, 2000 generations), we finally evolved two agents that successfully completed the level. The best agent achieved a score of 5980 and a distance of 3168 (the end of the level). The emergent behaviour was intelligent: the agent consistently moved right and timed jumps to avoid Goombas and obstacles.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\textwidth]{final_success.png}
+    \caption{Performance evolution with Guided Initialization and Elitism. The stability provided by elitism allows for consistent improvement, eventually leading to level completion.}
+    \label{fig:final_success}
+\end{figure}
+
+While our final score falls short of the paper's 12,000 (likely due to differences in the level length or bonus calculation in the "Learning Track"), the qualitative result is a success. We demonstrated that domain-specific heuristics (Guided Initialization) and stability mechanisms (Elitism) are essential for solving this optimization problem.
 
 \section{Conclusions}
-The referenced paper demonstrates that level completion in platformers can be successfully modeled as an optimization problem of action sequences. The results highlight the importance of \textbf{domain knowledge} in optimization heuristics:
-\begin{enumerate}
-    \item \textbf{Granularity Matters:} Using a granularity of $g=5$ (holding buttons for 5 ticks) significantly outperformed $g=1$, effectively reducing the search space and smoothing the agent's behavior.
-    \item \textbf{Guided Operators:} The domain-aware crossover (matching physical positions) and mutation (modifying the end-of-life sequence) were crucial. The naive GA often failed to converge on complex levels, whereas the tailored GA achieved scores surpassing the 2010 competition winner (avg. 12,059 vs 9,003).
-\end{enumerate}
-The study concludes that while "blind" optimization is possible, incorporating the semantic meaning of the optimization variables (e.g., "spatial continuity" in crossover) is essential for high-dimensional discrete problems like this one.
+Our reproduction confirms that Genetic Algorithms are a viable method for solving platformer levels as optimization problems, but "blind" optimization is insufficient. The standard GA failed to converge due to the high dimensionality of the search space. Incorporating domain knowledge, specifically biasing initialization towards forward movement, and ensuring stability via elitism were the critical factors that allowed us to evolve agents capable of beating the level.
 
+A key observation from our experiments is the efficacy of mutating genes based on the agent's failure point. While our current implementation relies on standard random mutation, we believe that an "intelligent mutation" operator that targets genes immediately preceding the agent's death would significantly accelerate training by focusing the search on the critical failure points. This aligns with the paper's findings on the importance of domain-dependent operators.
+
+\newpage
 \begin{thebibliography}{9}
 
 \bibitem{baldominos}
 A. Baldominos, Y. Saez, G. Recio, and J. Calle, ``Learning Levels of Mario AI Using Genetic Algorithms,'' in \textit{Conference of the Spanish Association for Artificial Intelligence}, pp. 267-277, Springer International Publishing, 2015.
+
+\bibitem{marioai}
+Ahmed Khalifa, ``Mario AI Framework,'' 2009. [Online]. Available: \url{https://github.com/amidos2006/Mario-AI-Framework}.
 
 \end{thebibliography}
 

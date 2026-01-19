@@ -1,4 +1,4 @@
-package agents.robinBaumgarten;
+package main.java.agents.robinBaumgarten;
 
 import java.util.ArrayList;
 import main.java.engine.core.MarioForwardModel;
