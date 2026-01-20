@@ -61,6 +61,36 @@ def generate_graph(csv_path, output_path, title):
     print(f"Generated graph: {output_path}")
 
 
+def generate_probability_graph(data, output_path, title, color_hex):
+    df = pd.DataFrame(data)
+    plt.figure(figsize=(12, 6))
+    sns.set_theme(style="whitegrid", context="paper", font_scale=1.1)
+
+    barplot = sns.barplot(data=df, x="Action", y="Probability", color=color_hex)
+
+    plt.title(title, fontsize=16, fontweight="bold", pad=20)
+    plt.xlabel("Action", fontsize=12)
+    plt.ylabel("Probability", fontsize=12)
+    plt.xticks(rotation=45, ha="right")
+    plt.ylim(0, 0.4)  # Fixed ylim to compare better
+
+    # Add values on top of bars
+    for p in barplot.patches:
+        barplot.annotate(
+            format(p.get_height(), ".2f"),
+            (p.get_x() + p.get_width() / 2.0, p.get_height()),
+            ha="center",
+            va="center",
+            xytext=(0, 9),
+            textcoords="offset points",
+        )
+
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+    print(f"Generated graph: {output_path}")
+
+
 def main():
     # Define paths relative to this script
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -79,6 +109,51 @@ def main():
         os.path.join(chromosomes_dir, "improved-algorithm-extra-training-results.csv"),
         os.path.join(output_dir, "final_success.png"),
         "Score Evolution (Improved Algorithm - Extra Training)",
+    )
+
+    # Actions list
+    actions = [
+        "Run",
+        "Jump",
+        "Down",
+        "Right",
+        "RightJump",
+        "RightDown",
+        "RightDownJump",
+        "Left",
+        "LeftJump",
+        "LeftDown",
+        "LeftDownJump",
+    ]
+
+    # Graph 3: Uniform Distribution
+    uniform_probs = [1 / 11] * 11
+    generate_probability_graph(
+        {"Action": actions, "Probability": uniform_probs},
+        os.path.join(output_dir, "uniform_distribution.png"),
+        "Uniform Random Initialization",
+        "#95a5a6",
+    )
+
+    # Graph 4: Guided Distribution
+    guided_probs = [
+        0.01,
+        0.07,
+        0.05,
+        0.325,
+        0.325,
+        0.05,
+        0.05,
+        0.05,
+        0.05,
+        0.01,
+        0.01,
+    ]
+    generate_probability_graph(
+        {"Action": actions, "Probability": guided_probs},
+        os.path.join(output_dir, "guided_distribution.png"),
+        "Guided Initialization (Heuristic)",
+        "#2ecc71",
     )
 
 
