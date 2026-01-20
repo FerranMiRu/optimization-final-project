@@ -61,9 +61,10 @@ public class PlayLevel {
     public static void main(String[] args) {
         MarioGame game = new MarioGame();
 
-        Agent agent = Agent.load("improved-algorithm-extra-training.txt");
+        Agent agent = Agent.load("full-reproduction.txt");
         // Agent agent = new Agent(3100, 5);
         // agent.setRandomChromosome();
+        // main.java.agents.robinBaumgarten.Agent agent = new main.java.agents.robinBaumgarten.Agent();
 
         printResults(
             game.runGame(agent, getLevel("./levels/original/lvl-1.txt"), 200, 0, true, 33, 3)
